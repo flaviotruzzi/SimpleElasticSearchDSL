@@ -108,7 +108,6 @@ class BoolQuery(Query):
 
 
 class BoostingQuery(Query):
-
     __slots__ = ['positive', 'negative', 'negative_boost']
 
     def __init__(self, positive=None, negative=None, negative_boost=None):
@@ -120,7 +119,6 @@ class BoostingQuery(Query):
 
 
 class CommonTermsQuery(Query):
-
     __slots__ = ['query', 'field', 'low_freq_operator', 'boost', 'analyzer', 'disable_coord', 'minimum_should_match',
                  'cutoff_frequency']
 
@@ -139,7 +137,6 @@ class CommonTermsQuery(Query):
 
 
 class ConstantScoreQuery(Query):
-
     __slots__ = ['filter', 'boost']
 
     def __init__(self, filter, boost=None):
@@ -150,7 +147,6 @@ class ConstantScoreQuery(Query):
 
 
 class TermQuery(Query):
-
     __slots__ = ['field', 'query', 'boost']
 
     def __init__(self, field, query, boost=None):
@@ -168,7 +164,6 @@ class TermQuery(Query):
 
 
 class DisMaxQuery(Query):
-
     __slots__ = ['queries', 'boost', 'tie_breaker']
 
     def __init__(self, queries, boost=None, tie_breaker=None):
@@ -180,7 +175,6 @@ class DisMaxQuery(Query):
 
 
 class FilteredQuery(Query):
-
     __slots__ = ['query', 'filter', 'strategy']
 
     def __init__(self, query=None, filter=None, strategy=None):
@@ -190,14 +184,14 @@ class FilteredQuery(Query):
         self.strategy = strategy
         self.query_type = 'filtered'
 
+
 # FilteredQuery(query=MatchQuery("tweet", "full text search"),
-#               filter=BoolQuery(should=[TermQuery("featured", True),
+# filter=BoolQuery(should=[TermQuery("featured", True),
 #                                        TermQuery("starred", True)],
 #                                must_not=TermQuery("deleted", False)))
 
 
 class FuzzyLikeThis(Query):
-
     __slots__ = ['like_text', 'fields', 'max_query_terms', 'ignore_tf', 'max_query_terms', 'fuzziness', 'boost',
                  'analyzer', 'prefix_length']
 
@@ -218,7 +212,6 @@ class FuzzyLikeThis(Query):
 
 
 class FuzzyLikeThisField(Query):
-
     __slots__ = ['like_text', 'field', 'max_query_terms', 'ignore_tf', 'fuzziness', 'boost', 'analyzer',
                  'prefix_length']
 
@@ -234,7 +227,6 @@ class FuzzyLikeThisField(Query):
         self.analyzer = analyzer
         self.prefix_length = prefix_length
         self.max_query_terms = max_query_terms
-
 
 
 class ScriptScore(Query):
@@ -267,11 +259,11 @@ class FieldValueFactor(Query):
         self.factor = factor
         self.modifier = modifier
 
+
 #TODO: implement decay function
 
 
 class FunctionScoreQuery(Query):
-
     def __init__(self, query=None, filter=None, boost=None, functions=None, boost_mode=None, max_boost=None,
                  score_mode=None):
         super(FunctionScoreQuery, self).__init__()
@@ -304,6 +296,7 @@ class FuzzyQuery(Query):
                                                                   'max_expansions')))
         return query
 
+
 FuzzyQuery("user", "ki", boost=1.0, fuzziness=2, prefix_length=0, max_expansions=100)
 
 
@@ -330,6 +323,7 @@ class HasParent(HasChild):
 
 class IdsQuery(Query):
     __slots__ = ['type', 'values']
+
     def __init__(self, values, type=None):
         super(IdsQuery, self).__init__()
         self.query_type = 'ids'
@@ -389,6 +383,7 @@ class MoreLikeThisFieldQuery(MoreLikeThisQuery):
 
 class NestedQuery(Query):
     __slots__ = ['path', 'score_mode', 'query']
+
     def __init__(self, query, path, score_mode):
         super(NestedQuery, self).__init__()
         self.query = query
@@ -397,6 +392,88 @@ class NestedQuery(Query):
         self.query_type = 'nested'
 
 
-print NestedQuery(BoolQuery(must=[MatchQuery("obj1.name", "blue")]), path="obj1", score_mode="avg").generate()
+print(NestedQuery(BoolQuery(must=[MatchQuery("obj1.name", "blue")]), path="obj1", score_mode="avg").generate())
+
+
+class PrefixQuery(Query):
+    __slots__ = ['query', 'field', 'boost']
+
+    def __init__(self, query, field, boost=None):
+        super(PrefixQuery, self).__init__()
+        self.query_type = 'prefix'
+        self.query = query
+        self.field = field
+        self.boost = boost
+
+    def generate(self):
+        query = {self.query_type: {self.field: {'value': self.query, 'boost': self.boost}}}
+        return query
+
+
+class QueryStringQuery(Query):
+    __slots__ = ['query', 'default_field', 'default_operator', 'tie_breaker', 'use_dis_max', 'fields', 'rewrite',
+                 'locale', 'lenient', 'minimum_should_match', 'auto_generate_phrase_queries', 'analyze_wildcard',
+                 'boost', 'phrase_slop', 'fuzzy_prefix_length', 'fuzziness', 'fuzzy_max_expansions',
+                 'enable_position_increments', 'lowercase_expanded_terms', 'allow_leading_wildcard', 'analyzer']
+
+    def __init__(self, query=None, default_field=None, default_operator=None, tie_breaker=None, use_dis_max=None,
+                 fields=None, rewrite=None, locale=None, lenient=None, minimum_should_match=None,
+                 auto_generate_phrase_queries=None, analyze_wildcard=None, boost=None, phrase_slop=None,
+                 fuzzy_prefix_length=None, fuzziness=None, fuzzy_max_expansions=None, enable_position_increments=None,
+                 lowercase_expanded_terms=None, allow_leading_wildcard=None, analyzer=None):
+        super(QueryStringQuery, self).__init__()
+        self.query_type = 'query_string'
+        self.default_field = default_field
+        self.default_operator = default_operator
+        self.analyzer = analyzer
+        self.allow_leading_wildcard = allow_leading_wildcard
+        self.lowercase_expanded_terms = lowercase_expanded_terms
+        self.enable_position_increments = enable_position_increments
+        self.fuzzy_max_expansions = fuzzy_max_expansions
+        self.fuzziness = fuzziness
+        self.fuzzy_prefix_length = fuzzy_prefix_length
+        self.phrase_slop = phrase_slop
+        self.boost = boost
+        self.analyze_wildcard = analyze_wildcard
+        self.auto_generate_phrase_queries = auto_generate_phrase_queries
+        self.minimum_should_match = minimum_should_match
+        self.lenient = lenient
+        self.locale = locale
+        self.rewrite = rewrite
+        self.fields = fields
+        self.use_dis_max = use_dis_max
+        self.tie_breaker = tie_breaker
+        self.query = query
+
 
 # stopped at http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
