@@ -1,5 +1,11 @@
 ## MatchQuery
 
+Create a simple MatchQuery. It accept the following parameters: 
+```python
+['field', 'query', 'operator', 'minimum_should_match','analyzer', 'fuzziness',
+ 'prefix_length', 'max_expansions', 'zero_terms_query', 'cutoff_frequency']
+```
+### Examples
 ```python
 query = MatchQuery(field="message", query="this is a test", analyzer="standard")
 

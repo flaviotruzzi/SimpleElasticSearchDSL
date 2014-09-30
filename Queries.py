@@ -2,10 +2,10 @@ __author__ = 'ftruzzi'
 
 
 class Query(object):
-    __slots__ = 'query_type'
 
     def __init__(self):
         self.query_type = 'query'
+        self.options = set()
 
     @staticmethod
     def __process_attribute__(attribute):
@@ -21,19 +21,21 @@ class Query(object):
             return {option: self.__process_attribute__(self.__getattribute__(option)) for option in slots if
                     self.__getattribute__(option)}
         else:
-            return {option: self.__process_attribute__(self.__getattribute__(option)) for option in self.__slots__ if
-                    self.__getattribute__(option)}
+            return {option: self.__process_attribute__(self.__getattribute__(option)) for option in
+                    self.__valid_keys__() if self.__getattribute__(option)}
+
+    def __valid_keys__(self):
+        for key in self.__dict__:
+            if key in self.options:
+                yield key
 
     def generate(self):
-        query = {self.query_type: {}}
-        query[self.query_type].update(self.__setup__())
+        query = {'query': {self.query_type: {}}}
+        query['query'][self.query_type].update(self.__setup__())
         return query
 
 
 class MatchQuery(Query):
-    __slots__ = ['field', 'query', 'operator', 'minimum_should_match',
-                 'analyzer', 'fuzziness', 'prefix_length', 'max_expansions',
-                 'zero_terms_query', 'cutoff_frequency']
 
     def __init__(self, field, query, operator=None, minimum_should_match=None, analyzer=None, fuzziness=None,
                  prefix_length=None, max_expansions=None, zero_terms_query=None, cutoff_frequency=None):
@@ -49,21 +51,33 @@ class MatchQuery(Query):
         self.zero_terms_query = zero_terms_query
         self.cutoff_frequency = cutoff_frequency
         self.query_type = "match"
+        self.options = {'query', 'operator', 'minimum_should_match', 'analyzer', 'fuzziness', 'prefix_length', 'max_expansions',
+                        'zero_terms_query', 'cutoff_frequency'}
+
+    def generate(self):
+        query = {'query': {self.query_type: {self.field: {}}}}
+        query['query'][self.query_type][self.field].update(self.__setup__())
+        return query
 
 
 class MatchAllQuery(MatchQuery):
     def __init__(self, field, **kwargs):
-        super(MatchAllQuery, self).__init__(field, query={}, **kwargs)
+        super(MatchAllQuery, self).__init__(field, query="", **kwargs)
         self.zero_terms_query = 'all'
+
+    def generate(self):
+        query = super(MatchAllQuery, self).generate()
+        query['query'][self.query_type][self.field]['query'] = ""
+        return query
 
 
 class MatchPhraseQuery(MatchQuery):
-    __slots__ = ['type', 'slop']
 
     def __init__(self, field, query, slop=None, **kwargs):
         super(MatchPhraseQuery, self).__init__(field, query, **kwargs)
         self.type = "phrase"
         self.slop = slop
+        self.options.update({'slop', 'type'})
 
 
 class MultiMatch(Query):
@@ -392,7 +406,7 @@ class NestedQuery(Query):
         self.query_type = 'nested'
 
 
-print(NestedQuery(BoolQuery(must=[MatchQuery("obj1.name", "blue")]), path="obj1", score_mode="avg").generate())
+#print(NestedQuery(BoolQuery(must=[MatchQuery("obj1.name", "blue")]), path="obj1", score_mode="avg").generate())
 
 
 class PrefixQuery(Query):
